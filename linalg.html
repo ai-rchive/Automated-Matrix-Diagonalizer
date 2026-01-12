@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Diagonalizable Matrix Checker </title>
+        <style>
+            body { font-family: Arial; padding: 20px; }
+            input { width: 60px; }
+            table { border-collapse: collapse; margin-bottom: 10px; }
+            td { border: 1px solid #ccc; padding: 4px; }
+            button { margin: 5px; padding: 6px 12px; }
+            pre { background: #f4f4f4; padding: 10px; }
+    </style>
+        </head>
+        
+        <body>
+        <h2>Diagonalizable Matrix Checker</h2>
+
+        <h3>INSTRUCTIONS</h3>
+            <h4>𐔌՞ ܸ.ˬ.ܸ՞𐦯</h4>
+        <label>Matrix size n (≤5): </label>
+        <input type="number" id="n" min="1" max="5" value="2">
+        <button onclick="makeMatrix()">Create Matrix</button>
+        <div id="matrixArea"></div>
+        <button onclick="confirmInput()">Confirm Matrix</button>
+        <button onclick="analyze()">Check Diagonalizable</button>
+        <pre id="output"></pre>
+        
+        
+
+        <script>
+        let A = [];
+
+        function makeMatrix(){
+        let n = +document.getElementById('n').value;
+        let html = '<table>';
+        for(let i=0;i<n;i++){
+            html += '<tr>';
+            for(let j=0;j<n;j++){
+            html += `<td><input id="a${i}${j}" value="0"></td>`;
+            }
+            html+='</tr>';
+        }
+        html+='</table>';
+        document.getElementById('matrixArea').innerHTML = html;
+        }
+
+        function confirmInput(){
+        let n = +document.getElementById('n').value;
+        A = [];
+        for(let i=0;i<n;i++){
+            let row=[];
+            for(let j=0;j<n;j++) row.push(+document.getElementById(`a${i}${j}`).value);
+            A.push(row);
+        }
+        alert('Matrix confirmed!');
+        }
+
+        function clone(M){ return M.map(r=>r.slice()); }
+
+            function multiply(A,B){
+            let n=A.length, m=B[0].length, p=B.length;
+            let C=Array.from({length:n},()=>Array(m).fill(0));
+            for(let i=0;i<n;i++)for(let j=0;j<m;j++)for(let k=0;k<p;k++)C[i][j]+=A[i][k]*B[k][j];
+            return C;
+        }
+
+        function identity(n){ return Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:0)); }
+
+        function transpose(M){ return M[0].map((_,j)=>M.map(r=>r[j])); }
+
+            function qrDecomp(A){
+            let n=A.length;
+            let Q=identity(n), R=clone(A);
+                for(let j=0;j<n;j++){
+                    let v = R.map(r=>r[j]);
+                    for(let i=0;i<j;i++){
+                    let qi = Q.map(r=>r[i]);
+                    let dot = qi.reduce((s,x,k)=>s+x*v[k],0);
+                    for(let k=0;k<n;k++) v[k]-=dot*qi[k];
+                    }
+                    let norm = Math.sqrt(v.reduce((s,x)=>s+x*x,0));
+                    if(norm===0) continue;
+                    for(let k=0;k<n;k++) Q[k][j]=v[k]/norm;
+        }
+        R = multiply(transpose(Q),A);
+        return {Q,R};
+        }
+
+        function eigenvalues(A,it=60){
+        let M=clone(A);
+        for(let k=0;k<it;k++){
+            let {Q,R}=qrDecomp(M);
+            M = multiply(R,Q);
+        }
+        return M.map((r,i)=>r[i]);
+        }
+
+        function solveEigenVector(A,lambda){
+        let n=A.length;
+        let M=A.map((r,i)=>r.map((x,j)=>x-(i===j?lambda:0)));
+        let v=Array(n).fill(1);
+        return v; // simplified placeholder
+        }
+
+        function analyze(){
+        let out=document.getElementById('output');
+        let n=A.length;
+        if(n===0){ out.textContent='Please confirm matrix first.'; return; }
+
+        let eig = eigenvalues(A).map(x=>Math.round(x*1000)/1000);
+        out.textContent='Approx eigenvalues: '+eig.join(', ')+'\n';
+
+        let unique = [...new Set(eig)];
+        if(unique.length===n){
+            out.textContent+='All eigenvalues distinct → Diagonalizable.\n';
+        }else{
+            out.textContent+='Repeated eigenvalues detected. Might not be diagonalizable.\n';
+        }
+        out.textContent+='(Full P and D computation is conceptually: columns of P = eigenvectors, D = diag(eigenvalues))';
+        }
+</script>
+</body>
+</html>
